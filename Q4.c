@@ -1,76 +1,122 @@
-#include <stdio.h>
-#include <conio.h>
-#include <stdlib.h>
+#include<stdio.h>
+#include<stdlib.h>
+int *arr,*rear,*base,*front,n,k;
 
-struct tree {
-    int val;
-    struct tree *right;
-    struct tree *left;
-    int thread;
-};
-
-struct tree *root = NULL;
-
-struct tree* insert_node(struct tree *root, struct tree *ptr, struct tree *rt) {
-    if(root == NULL) {
-        root = ptr;
-        if(rt != NULL) {
-            root->right = rt;
-            root->thread = 1;
-        }
-    }
-    else if(ptr->val < root->val)
-        root->left = insert_node(root->left, ptr, root);
-    else if(root->thread == 1) {
-        root->right = insert_node(NULL, ptr, rt);
-        root->thread=0;
-    }
-    else
-        root->right = insert_node(root->right, ptr, rt);
-    return root;
-}
-
-struct tree* create_threaded_tree() {
-    struct tree *ptr;
-    int num;
-    printf("\n Enter the elements, press -1 to terminate ");
-    scanf("%d", &num);
-    while(num != -1) {
-        ptr = (struct tree*)malloc(sizeof(struct tree));
-        ptr->val = num;
-        ptr->left = ptr->right = NULL;
-        ptr->thread = 0;
-        root = insert_node(root, ptr, NULL);
-        printf(" \n Enter the next element ");
-        fflush(stdin);
-        scanf("%d", &num);
-    }
-    return root;
-}
-
-void inorder(struct tree *root) {
-    struct tree *ptr = root, *prev;
-    do {
-        while(ptr != NULL){
-            prev = ptr;ptr = ptr->left;
-        }
-        if(prev != NULL) {
-            printf("%d", prev->val);
-            ptr = prev->right;
-            while(prev != NULL && prev->thread) {
-                printf("%d", ptr->val);
-                prev = ptr;
-                ptr = ptr->right;
-            }
-        }
-    }
-    while(ptr != NULL);
-}
+void createKqueues() {
+    int i;
+    arr = (int*)malloc(n*sizeof(int));
+    front = (int*)malloc((k+1)*sizeof(int));
+    rear = (int*)malloc((k+1)*sizeof(int));
+    base = (int*)malloc((k+2)*sizeof(int));
     
-void main() {
-    struct tree *root=NULL;
-    create_threaded_tree();
-    printf(" \n The in-order traversal of the tree can be given as : ");
-    inorder(root);
-    getch();
+    for(i=1;i<=k;i++)
+        rear[i] = -1 + n/k*(i-1);
+     for(i=1;i<=k;i++)
+        front[i] = n/k*(i-1);
+    for(i=1;i<=k;i++)
+        base[i] = -1 + n/k*(i-1);
+    base[k+1] = n-1;
+    printf("An arrays of %d elements with %d queues in an array has been created\n",n,k);
+}
+
+void enqueue(int queue,int data) {
+    int i;
+    if(rear[queue] == base[queue+1]) {
+        
+        if(queue!=k && rear[queue+1]!=base[queue+2]) {
+            for(i=rear[queue+1];i>=front[queue+1];i--)
+                arr[i+1] = arr[i];
+            base[queue+1] += 1;
+            rear[queue+1] += 1;
+            front[queue+1] += 1;
+            arr[++rear[queue]] = data; 
+            printf("element %d is enqueueed into the queue %d\n",data,queue);
+        }
+        else {
+            printf("Overflow in queue %d\n",queue);
+        }   
+    }
+    else {
+        arr[++rear[queue]] = data;
+        printf("element %d is enqueueed into the queue %d\n",data,queue);
+    }
+}
+
+void dequeue(int queue) {
+    if(rear[queue] < front[queue]) {
+        printf("Undeflow in queue %d\n",queue);
+        return;
+    }
+    printf("element %d is dequeuepped out from queue %d\n",arr[front[queue]++],queue);
+}
+
+int Front(int queue) {
+    if(rear[queue] < front[queue]) {
+        printf("Undeflow in queue %d\n",queue);
+        return;
+    }
+    printf("element %d is currently at the rear of queue %d\n",arr[front[queue]],queue);
+}
+
+void display(int queue ,int start, int end) {
+    int i;
+    if(start>end) {
+        printf("queue %d is empty\n",queue);
+        return;
+    }
+    printf("Contents of the queue %d are(leftmost element is at the front) :\n",queue);
+    for(i=start;i<=end;i++)
+        printf("%d ",arr[i]);
+    printf("\n");
+}
+
+int main() {
+    int choice, x, y;
+    printf("Enter the size of the array in which you want to make multiple queues : ");
+    scanf("%d",&n);
+    printf("Enter the number of queues you want to make in that array : ");
+    scanf("%d",&k);
+    createKqueues();
+    printf("\nChoices are : \n");
+    printf("1. enqueue an item into the queue :\n");
+    printf("2. dequeue an item from the queue :\n");
+    printf("3. Get the front element of the queue :\n");
+    printf("4. Display the contents of the queue : \n");
+    printf("5. Exit :\n");
+    while (1)
+    {
+        printf("------------------------------------------------------");
+        printf("\nEnter your choice:");
+        scanf("%d", &choice);
+        switch (choice)
+        {
+        case 1:
+            printf("Enter the queue number(1 to 3) : ");
+            scanf("%d",&y);
+            printf("Enter the element you want to enqueue into the queue : ");
+            scanf("%d", &x);
+            enqueue(y,x);
+            break;
+        case 2:
+            printf("Enter the queue number(1 to 3) : ");
+            scanf("%d",&y);
+            dequeue(y);
+            break;
+        case 3:
+            printf("Enter the queue number(1 to 3) : ");
+            scanf("%d",&y);
+            Front(y);
+            break;
+        case 4:
+            printf("Enter the queue number(1 to 3) : ");
+            scanf("%d",&y);
+            display(y,front[y],rear[y]);
+            break;
+        case 5:
+            exit(0);
+        default:
+            printf("Invalid choice.");
+        }
+        getch();
+    }
 }
